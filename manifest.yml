@@ -1,0 +1,4 @@
+applications:
+- name: pivotal-cf-test-app
+  instances: 1
+  path: build/libs/app-0.1.0.jar
