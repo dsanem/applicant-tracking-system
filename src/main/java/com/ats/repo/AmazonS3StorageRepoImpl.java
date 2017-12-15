@@ -29,24 +29,15 @@ public class AmazonS3StorageRepoImpl implements ResumeStorageRepo {
 
 
     @Override
-    public Mono<Long> saveResume(Object file, String path) throws IOException {
-        PutObjectRequest putObjectRequest = null;
-        long fileSize = 0;
-        if (file instanceof MultipartFile) {
-            ObjectMetadata metadata = new ObjectMetadata();
-            ((MultipartFile) file).getSize();
-            metadata.setContentLength(fileSize);
-            putObjectRequest = new PutObjectRequest(bucketName,
-                    path,
-                    ((MultipartFile) file).getInputStream(),
-                    metadata);
-        } else {
-            File fileToUpload = new File("C:\\Users\\deepak.sanem\\Desktop", "abcd.txt");
-            fileSize = fileToUpload.length();
-            putObjectRequest = new PutObjectRequest(bucketName,
-                    path,
-                    fileToUpload);
-        }
+    public Mono<Long> saveResume(MultipartFile file, String path) throws IOException {
+
+        ObjectMetadata metadata = new ObjectMetadata();
+        long fileSize = file.getSize();
+        metadata.setContentLength(fileSize);
+        PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName,
+                path,
+                file.getInputStream(),
+                metadata);
 
         amazonS3.putObject(putObjectRequest);
         return Mono.just(fileSize);

@@ -26,9 +26,6 @@ public class ApplicantResource {
     private final ApplicantService applicantService;
 
     @Autowired
-    protected ResumeStorageRepo resumeStorageRepo;
-
-    @Autowired
     public ApplicantResource(ApplicantService applicantService) {
         this.applicantService = applicantService;
     }
@@ -51,24 +48,12 @@ public class ApplicantResource {
     }
 
     @PostMapping(path = "/applicant")
-    public Mono<Applicant> newApplicant(@RequestBody @Valid Applicant applicant) {
+    public Mono<Applicant> addApplicant(@RequestParam("file") MultipartFile file, @RequestBody @Valid Applicant applicant) {
         return applicantService.create(applicant);
     }
 
     @PutMapping(path = "/applicant/{id}")
     public Mono<Applicant> updateApplicant(@RequestBody @Valid Applicant applicant, @PathVariable("id") String id) {
         return applicantService.updateById(applicant, id);
-    }
-
-    @PostMapping(path = "/resume",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public Mono<String> uploadResume(@RequestParam("file") MultipartFile file) {
-        return null;
-    }
-
-    @GetMapping(path = "/test")
-    public Mono<String> testEndpoint() throws IOException {
-        resumeStorageRepo.saveResume(new Object(), "test/folder");
-        return Mono.just("done");
     }
 }
