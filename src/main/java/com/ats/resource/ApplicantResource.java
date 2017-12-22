@@ -3,6 +3,7 @@ package com.ats.resource;
 import com.ats.model.Applicant;
 import com.ats.service.ApplicantService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
@@ -20,6 +21,7 @@ import java.io.IOException;
 import java.util.Set;
 
 @RestController
+@Slf4j
 public class ApplicantResource {
 
     private final ApplicantService applicantService;
@@ -47,7 +49,7 @@ public class ApplicantResource {
         return applicantService.findById(id);
     }
 
-    @GetMapping(path = "/applicant/phonenumber/phoneNumber")
+    @GetMapping(path = "/applicant/phonenumber/{phoneNumber}")
     public Flux<Applicant> findApplicantByPhoneNumber(@PathVariable("phoneNumber") String phoneNumber) {
         return applicantService.findByPhoneNumber(phoneNumber);
     }

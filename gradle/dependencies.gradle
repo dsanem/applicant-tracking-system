@@ -13,7 +13,9 @@ dependencies {
             'com.amazonaws:aws-java-sdk-s3:1.11.248',
             'commons-io:commons-io:2.6',
             'org.hibernate:hibernate-validator:6.0.6.Final',
-            group: 'org.apache.commons', name: 'commons-lang3', version: '3.7',
+            'org.apache.commons:commons-lang3:3.7',
+            'org.springframework.cloud:spring-cloud-starter-sleuth',
+            'com.google.cloud:google-cloud-storage:1.14.0'
 
     )
 

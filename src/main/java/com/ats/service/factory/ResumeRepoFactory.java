@@ -3,7 +3,9 @@ package com.ats.service.factory;
 import com.amazonaws.services.s3.AmazonS3;
 import com.ats.config.Profile;
 import com.ats.repo.AmazonS3StorageRepoImpl;
+import com.ats.repo.GoogleStorageRepoImpl;
 import com.ats.repo.ResumeStorageRepo;
+import com.google.cloud.storage.Storage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -12,16 +14,24 @@ import org.springframework.stereotype.Component;
 public class ResumeRepoFactory {
 
 
-    protected final AmazonS3 amazonS3;
+    private final AmazonS3 amazonS3;
 
-    protected final String bucketName;
+    private final Storage storage;
+
+    private final String awsBucketName;
+
+    private final String googleBucketName;
 
 
     @Autowired
     public ResumeRepoFactory(AmazonS3 amazonS3,
-                             @Value("${aws.s3.bucketName}") String bucketName) {
+                             Storage storage,
+                             @Value("${aws.s3.bucketName}") String awsBucketName,
+                             @Value("${google.bucket.name}") String googleBucketName) {
         this.amazonS3 = amazonS3;
-        this.bucketName = bucketName;
+        this.storage = storage;
+        this.googleBucketName = googleBucketName;
+        this.awsBucketName = awsBucketName;
     }
 
     public ResumeStorageRepo getStorageRepo(Profile profile) {
@@ -30,11 +40,11 @@ public class ResumeRepoFactory {
 
         switch (profile) {
             case NON_PROD:
-                return new AmazonS3StorageRepoImpl(amazonS3, bucketName);
+                return new AmazonS3StorageRepoImpl(amazonS3, awsBucketName);
             case PROD:
-                return new AmazonS3StorageRepoImpl(amazonS3, bucketName);
+                return new AmazonS3StorageRepoImpl(amazonS3, awsBucketName);
             default:
-                return new AmazonS3StorageRepoImpl(amazonS3, bucketName);
+                return new GoogleStorageRepoImpl(storage, googleBucketName);
 
         }
     }
