@@ -37,6 +37,20 @@ public class ApplicantResource {
         this.validator = validator;
     }
 
+    @PostMapping(path = "/applicant",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Mono<Applicant> addApplicant(@RequestParam("file") MultipartFile file, @RequestParam("body") String maybeApplicant) throws IOException {
+
+        Applicant applicant = mapper.readValue(maybeApplicant, Applicant.class);
+        Set<ConstraintViolation<Applicant>> constraintViolations = validator.validate(applicant, Default.class);
+
+        if (!constraintViolations.isEmpty()) {
+            throw new ConstraintViolationException(constraintViolations);
+        }
+
+        return applicantService.create(applicant, file);
+    }
+
     @GetMapping(path = "/applicant/firstname/{firstName}",
             produces = MediaType.APPLICATION_STREAM_JSON_VALUE)
     public Flux<Applicant> findAllApplicantsWithFirstName(@PathVariable("firstName") String firstName) {
@@ -54,19 +68,6 @@ public class ApplicantResource {
         return applicantService.findByPhoneNumber(phoneNumber);
     }
 
-    @PostMapping(path = "/applicant",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public Mono<Applicant> addApplicant(@RequestParam("file") MultipartFile file, @RequestParam("body") String maybeApplicant) throws IOException {
-
-        Applicant applicant = mapper.readValue(maybeApplicant, Applicant.class);
-        Set<ConstraintViolation<Applicant>> constraintViolations = validator.validate(applicant, Default.class);
-
-        if (!constraintViolations.isEmpty()) {
-            throw new ConstraintViolationException(constraintViolations);
-        }
-
-        return applicantService.create(applicant, file);
-    }
 
     @PutMapping(path = "/applicant/{id}")
     public Mono<Applicant> updateApplicant(@RequestBody @Valid Applicant applicant, @PathVariable("id") String id) {
