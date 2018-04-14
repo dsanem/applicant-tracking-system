@@ -1,74 +1,79 @@
 package com.ats.resource;
 
+import com.ats.config.Profile;
 import com.ats.model.Applicant;
-import com.ats.repo.ResumeStorageRepo;
 import com.ats.service.ApplicantService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
 import javax.validation.Valid;
-import javax.websocket.server.PathParam;
+import javax.validation.Validator;
+import javax.validation.groups.Default;
 import java.io.IOException;
+import java.util.Set;
 
 @RestController
+@Slf4j
 public class ApplicantResource {
 
     private final ApplicantService applicantService;
+    private final ObjectMapper mapper;
+    private final Validator validator;
+
 
     @Autowired
-    protected ResumeStorageRepo resumeStorageRepo;
-
-    @Autowired
-    public ApplicantResource(ApplicantService applicantService) {
+    public ApplicantResource(ApplicantService applicantService, ObjectMapper mapper,
+                             @Qualifier("ATSValidator") Validator validator) {
         this.applicantService = applicantService;
+        this.mapper = mapper;
+        this.validator = validator;
     }
 
-    @GetMapping(path = "/applicant",
+    @PostMapping(path = "/applicant/profile/{profile}",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Mono<Applicant> addApplicant(@RequestParam("file") MultipartFile file,
+                                        @RequestParam("body") String maybeApplicant,
+                                        @PathVariable("profile") Profile profile) throws IOException {
+
+        Applicant applicant = mapper.readValue(maybeApplicant, Applicant.class);
+        Set<ConstraintViolation<Applicant>> constraintViolations = validator.validate(applicant, Default.class);
+
+        if (!constraintViolations.isEmpty()) {
+            throw new ConstraintViolationException(constraintViolations);
+        }
+
+        return applicantService.create(applicant, file, profile);
+    }
+
+    @GetMapping(path = "/applicant/firstname/{firstName}",
             produces = MediaType.APPLICATION_STREAM_JSON_VALUE)
-    public Flux<Applicant> findAllApplicantsWithFirstName(@PathParam("firstName") String firstName) {
+    public Flux<Applicant> findAllApplicantsWithFirstName(@PathVariable("firstName") String firstName) {
         return applicantService.findByFirstName(firstName);
     }
 
-    @GetMapping(path = "/applicant",
+    @GetMapping(path = "/applicant/id/{id}",
             produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<Applicant> findApplicantById(@PathParam("id") String id) {
+    public Mono<Applicant> findApplicantById(@PathVariable("id") String id) {
         return applicantService.findById(id);
     }
 
-    @GetMapping(path = "/applicant")
-    public Flux<Applicant> findApplicantByPhoneNumber(@PathParam("phoneNumber") String phoneNumber) {
+    @GetMapping(path = "/applicant/phonenumber/{phoneNumber}")
+    public Flux<Applicant> findApplicantByPhoneNumber(@PathVariable("phoneNumber") String phoneNumber) {
         return applicantService.findByPhoneNumber(phoneNumber);
     }
 
-    @PostMapping(path = "/applicant")
-    public Mono<Applicant> newApplicant(@RequestBody @Valid Applicant applicant) {
-        return applicantService.create(applicant);
-    }
 
     @PutMapping(path = "/applicant/{id}")
     public Mono<Applicant> updateApplicant(@RequestBody @Valid Applicant applicant, @PathVariable("id") String id) {
         return applicantService.updateById(applicant, id);
-    }
-
-    @PostMapping(path = "/resume",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public Mono<String> uploadResume(@RequestParam("file") MultipartFile file) {
-        return null;
-    }
-
-    @GetMapping(path = "/test")
-    public Mono<String> testEndpoint() throws IOException {
-        resumeStorageRepo.saveResume(new Object(), "test/folder");
-        return Mono.just("done");
     }
 }
