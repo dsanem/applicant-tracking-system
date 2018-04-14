@@ -1,5 +1,6 @@
 package com.ats.resource;
 
+import com.ats.config.Profile;
 import com.ats.model.Applicant;
 import com.ats.service.ApplicantService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,9 +38,11 @@ public class ApplicantResource {
         this.validator = validator;
     }
 
-    @PostMapping(path = "/applicant",
+    @PostMapping(path = "/applicant/profile/{profile}",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public Mono<Applicant> addApplicant(@RequestParam("file") MultipartFile file, @RequestParam("body") String maybeApplicant) throws IOException {
+    public Mono<Applicant> addApplicant(@RequestParam("file") MultipartFile file,
+                                        @RequestParam("body") String maybeApplicant,
+                                        @PathVariable("profile") Profile profile) throws IOException {
 
         Applicant applicant = mapper.readValue(maybeApplicant, Applicant.class);
         Set<ConstraintViolation<Applicant>> constraintViolations = validator.validate(applicant, Default.class);
@@ -48,7 +51,7 @@ public class ApplicantResource {
             throw new ConstraintViolationException(constraintViolations);
         }
 
-        return applicantService.create(applicant, file);
+        return applicantService.create(applicant, file, profile);
     }
 
     @GetMapping(path = "/applicant/firstname/{firstName}",

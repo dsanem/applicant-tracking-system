@@ -4,6 +4,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.ats.config.Profile;
 import com.ats.repo.AmazonS3StorageRepoImpl;
 import com.ats.repo.GoogleStorageRepoImpl;
+import com.ats.repo.LocalStorageRepoImpl;
 import com.ats.repo.ResumeStorageRepo;
 import com.google.cloud.storage.Storage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,10 +40,12 @@ public class ResumeRepoFactory {
         //Modify this as you get more ways to store
 
         switch (profile) {
-            case NON_PROD:
+            case AWS:
                 return new AmazonS3StorageRepoImpl(amazonS3, awsBucketName);
-            case PROD:
-                return new AmazonS3StorageRepoImpl(amazonS3, awsBucketName);
+            case GOOGLE:
+                return new GoogleStorageRepoImpl(storage, googleBucketName);
+            case LOCAL:
+                return new LocalStorageRepoImpl();
             default:
                 return new GoogleStorageRepoImpl(storage, googleBucketName);
 

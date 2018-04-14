@@ -21,17 +21,15 @@ public class ApplicantService {
 
     private final ApplicantRepository applicantRepository;
     private final ResumeRepoFactory resumeRepoFactory;
-    private final Profile profile;
 
     @Autowired
-    public ApplicantService(ApplicantRepository applicantRepository, ResumeRepoFactory resumeRepoFactory,
-                            @Value("${ats.application.profile}") Profile profile) {
+    public ApplicantService(ApplicantRepository applicantRepository,
+                            ResumeRepoFactory resumeRepoFactory) {
         this.applicantRepository = applicantRepository;
         this.resumeRepoFactory = resumeRepoFactory;
-        this.profile = profile;
     }
 
-    public Mono<Applicant> create(Applicant applicant, MultipartFile resumeFile) {
+    public Mono<Applicant> create(Applicant applicant, MultipartFile resumeFile, Profile profile) {
 
         return applicantRepository.insert(applicant)
                 .flatMap(res -> findById(res.getId())
